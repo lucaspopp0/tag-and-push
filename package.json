@@ -1,0 +1,29 @@
+{
+  "name": "tag-and-push",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/lucaspopp0/tag-and-push#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lucaspopp0/tag-and-push.git"
+  },
+  "license": "MIT",
+  "author": "Lucas Popp",
+  "main": "lib/main.js",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "pack": "esbuild src/main.ts --bundle --platform=node --format=cjs --target=node24 --outfile=dist/index.js"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "esbuild": "^0.25.0",
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "@actions/core": "^3.0.1",
+    "@actions/github": "^9.1.1",
+    "@octokit/auth-action": "^6.0.2",
+    "@octokit/request-error": "^7.1.0",
+    "@octokit/rest": "^22.0.1"
+  }
+}
