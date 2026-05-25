@@ -5,6 +5,12 @@ inputs:
   tag:
     description: Tag to push
     required: true
+  app-client-id:
+    required: false
+    description: ""
+  app-private-key:
+    required: false
+    description: ""
 
 runs:
   using: node24
