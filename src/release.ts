@@ -1,91 +1,12 @@
-import { graphql } from "@octokit/graphql";
+import { getOctokit } from "@actions/github";
+import { RequestError } from "@octokit/request-error";
 
 type ReleaseResult = {
     releaseUrl: string;
 };
 
-const getReleaseIdByTagName = async (
-    token: string,
-    owner: string,
-    name: string,
-    tagName: string,
-): Promise<string | null> => {
-    const { repository } = await graphql<{
-        repository: { release: { id: string } | null };
-    }>(
-        `
-            query ($owner: String!, $name: String!, $tagName: String!) {
-                repository(owner: $owner, name: $name) {
-                    release(tagName: $tagName) {
-                        id
-                    }
-                }
-            }
-        `,
-        {
-            owner,
-            name,
-            tagName,
-            headers: { authorization: `token ${token}` },
-        },
-    );
-
-    return repository.release?.id ?? null;
-};
-
-const deleteReleaseById = async (
-    token: string,
-    releaseId: string,
-): Promise<void> => {
-    await graphql(
-        `
-            mutation ($input: DeleteReleaseInput!) {
-                deleteRelease(input: $input) {
-                    clientMutationId
-                }
-            }
-        `,
-        {
-            input: { releaseId },
-            headers: { authorization: `token ${token}` },
-        },
-    );
-};
-
-const createReleaseForTag = async (
-    token: string,
-    repositoryId: string,
-    tagName: string,
-): Promise<ReleaseResult> => {
-    const { createRelease } = await graphql<{
-        createRelease: {
-            release: {
-                url: string;
-            };
-        };
-    }>(
-        `
-            mutation ($input: CreateReleaseInput!) {
-                createRelease(input: $input) {
-                    release {
-                        url
-                    }
-                }
-            }
-        `,
-        {
-            input: {
-                repositoryId,
-                tagName,
-                name: tagName,
-            },
-            headers: { authorization: `token ${token}` },
-        },
-    );
-
-    return {
-        releaseUrl: createRelease.release.url,
-    };
+const isNotFoundError = (error: unknown): boolean => {
+    return error instanceof RequestError && error.status === 404;
 };
 
 export const deleteReleaseIfExists = async (options: {
@@ -95,22 +16,51 @@ export const deleteReleaseIfExists = async (options: {
     tagName: string;
 }): Promise<boolean> => {
     const { token, owner, repo, tagName } = options;
-    const releaseId = await getReleaseIdByTagName(token, owner, repo, tagName);
+    const octokit = getOctokit(token);
 
-    if (!releaseId) {
-        return false;
+    let releaseId: number;
+
+    try {
+        const { data } = await octokit.rest.repos.getReleaseByTag({
+            owner,
+            repo,
+            tag: tagName,
+        });
+        releaseId = data.id;
+    } catch (error: unknown) {
+        if (isNotFoundError(error)) {
+            return false;
+        }
+
+        throw error;
     }
 
-    await deleteReleaseById(token, releaseId);
+    await octokit.rest.repos.deleteRelease({
+        owner,
+        repo,
+        release_id: releaseId,
+    });
+
     return true;
 };
 
 export const createRelease = async (options: {
     token: string;
-    repositoryId: string;
+    owner: string;
+    repo: string;
     tagName: string;
 }): Promise<ReleaseResult> => {
-    const { token, repositoryId, tagName } = options;
+    const { token, owner, repo, tagName } = options;
+    const octokit = getOctokit(token);
 
-    return createReleaseForTag(token, repositoryId, tagName);
+    const { data } = await octokit.rest.repos.createRelease({
+        owner,
+        repo,
+        tag_name: tagName,
+        name: tagName,
+    });
+
+    return {
+        releaseUrl: data.html_url,
+    };
 };

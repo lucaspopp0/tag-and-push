@@ -20115,6 +20115,14 @@ var __awaiter2 = function(thisArg, _arguments, P, generator) {
     step((generator = generator.apply(thisArg, _arguments || [])).next());
   });
 };
+function getAuthString(token, options) {
+  if (!token && !options.auth) {
+    throw new Error("Parameter token or opts.auth is required");
+  } else if (token && options.auth) {
+    throw new Error("Parameters token and opts.auth may not both be specified");
+  }
+  return typeof options.auth === "string" ? options.auth : `token ${token}`;
+}
 function getProxyAgent(destinationUrl) {
   const hc = new httpClient.HttpClient();
   return hc.getAgent(destinationUrl);
@@ -20132,6 +20140,19 @@ function getProxyFetch(destinationUrl) {
 }
 function getApiBaseUrl() {
   return process.env["GITHUB_API_URL"] || "https://api.github.com";
+}
+function getUserAgentWithOrchestrationId(baseUserAgent) {
+  var _a;
+  const orchId = (_a = process.env["ACTIONS_ORCHESTRATION_ID"]) === null || _a === void 0 ? void 0 : _a.trim();
+  if (orchId) {
+    const sanitizedId = orchId.replace(/[^a-z0-9_.-]/gi, "_");
+    const tag = `actions_orchestration_id/${sanitizedId}`;
+    if (baseUserAgent === null || baseUserAgent === void 0 ? void 0 : baseUserAgent.includes(tag))
+      return baseUserAgent;
+    const ua = baseUserAgent ? `${baseUserAgent} ` : "";
+    return `${ua}${tag}`;
+  }
+  return baseUserAgent;
 }
 
 // node_modules/universal-user-agent/index.js
@@ -23738,82 +23759,66 @@ var defaults = {
   }
 };
 var GitHub = Octokit.plugin(restEndpointMethods, paginateRest).defaults(defaults);
+function getOctokitOptions(token, options) {
+  const opts = Object.assign({}, options || {});
+  const auth2 = getAuthString(token, opts);
+  if (auth2) {
+    opts.auth = auth2;
+  }
+  const userAgent2 = getUserAgentWithOrchestrationId(opts.userAgent);
+  if (userAgent2) {
+    opts.userAgent = userAgent2;
+  }
+  return opts;
+}
 
 // node_modules/@actions/github/lib/github.js
 var context2 = new Context();
+function getOctokit(token, options, ...additionalPlugins) {
+  const GitHubWithPlugins = GitHub.plugin(...additionalPlugins);
+  return new GitHubWithPlugins(getOctokitOptions(token, options));
+}
 
 // src/release.ts
-var getReleaseIdByTagName = async (token, owner, name, tagName) => {
-  const { repository } = await graphql2(
-    `
-            query ($owner: String!, $name: String!, $tagName: String!) {
-                repository(owner: $owner, name: $name) {
-                    release(tagName: $tagName) {
-                        id
-                    }
-                }
-            }
-        `,
-    {
-      owner,
-      name,
-      tagName,
-      headers: { authorization: `token ${token}` }
-    }
-  );
-  return repository.release?.id ?? null;
-};
-var deleteReleaseById = async (token, releaseId) => {
-  await graphql2(
-    `
-            mutation ($input: DeleteReleaseInput!) {
-                deleteRelease(input: $input) {
-                    clientMutationId
-                }
-            }
-        `,
-    {
-      input: { releaseId },
-      headers: { authorization: `token ${token}` }
-    }
-  );
-};
-var createReleaseForTag = async (token, repositoryId, tagName) => {
-  const { createRelease: createRelease2 } = await graphql2(
-    `
-            mutation ($input: CreateReleaseInput!) {
-                createRelease(input: $input) {
-                    release {
-                        url
-                    }
-                }
-            }
-        `,
-    {
-      input: {
-        repositoryId,
-        tagName,
-        name: tagName
-      },
-      headers: { authorization: `token ${token}` }
-    }
-  );
-  return {
-    releaseUrl: createRelease2.release.url
-  };
+var isNotFoundError = (error2) => {
+  return error2 instanceof RequestError && error2.status === 404;
 };
 var deleteReleaseIfExists = async (options) => {
   const { token, owner, repo, tagName } = options;
-  const releaseId = await getReleaseIdByTagName(token, owner, repo, tagName);
-  if (!releaseId) {
-    return false;
+  const octokit = getOctokit(token);
+  let releaseId;
+  try {
+    const { data } = await octokit.rest.repos.getReleaseByTag({
+      owner,
+      repo,
+      tag: tagName
+    });
+    releaseId = data.id;
+  } catch (error2) {
+    if (isNotFoundError(error2)) {
+      return false;
+    }
+    throw error2;
   }
-  await deleteReleaseById(token, releaseId);
+  await octokit.rest.repos.deleteRelease({
+    owner,
+    repo,
+    release_id: releaseId
+  });
   return true;
 };
 var createRelease = async (options) => {
-  const { token, repositoryId, tagName } = options;
-  return createReleaseForTag(token, repositoryId, tagName);
+  const { token, owner, repo, tagName } = options;
+  const octokit = getOctokit(token);
+  const { data } = await octokit.rest.repos.createRelease({
+    owner,
+    repo,
+    tag_name: tagName,
+    name: tagName
+  });
+  return {
+    releaseUrl: data.html_url
+  };
 };
 
 // src/tag.ts
@@ -23953,10 +23958,10 @@ var run = async () => {
   setOutput("tag-sha", result.tagSha);
   info(`Tag created: ${result.tagUrl}`);
   if (shouldCreateRelease) {
-    const repositoryId = await getRepositoryId(token, owner, repo);
     const release = await createRelease({
       token,
-      repositoryId,
+      owner,
+      repo,
       tagName: tag
     });
     setOutput("release-url", release.releaseUrl);

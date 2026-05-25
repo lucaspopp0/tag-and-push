@@ -1,7 +1,7 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import { createRelease, deleteReleaseIfExists } from "./release";
-import { getRepositoryId, normalizeTagName, pushTag } from "./tag";
+import { normalizeTagName, pushTag } from "./tag";
 
 const run = async (): Promise<void> => {
     const tag = normalizeTagName(core.getInput("tag", { required: true }));
@@ -43,10 +43,10 @@ const run = async (): Promise<void> => {
     core.info(`Tag created: ${result.tagUrl}`);
 
     if (shouldCreateRelease) {
-        const repositoryId = await getRepositoryId(token, owner, repo);
         const release = await createRelease({
             token,
-            repositoryId,
+            owner,
+            repo,
             tagName: tag,
         });
 

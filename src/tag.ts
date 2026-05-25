@@ -20,7 +20,7 @@ const tagRefName = (tag: string): string => {
     return `refs/tags/${name}`;
 };
 
-export const getRepositoryId = async (
+const getRepositoryId = async (
     token: string,
     owner: string,
     name: string,
