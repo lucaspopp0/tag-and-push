@@ -20004,6 +20004,17 @@ function getInput(name, options) {
   }
   return val.trim();
 }
+function getBooleanInput(name, options) {
+  const trueValue = ["true", "True", "TRUE"];
+  const falseValue = ["false", "False", "FALSE"];
+  const val = getInput(name, options);
+  if (trueValue.includes(val))
+    return true;
+  if (falseValue.includes(val))
+    return false;
+  throw new TypeError(`Input does not meet YAML 1.2 "Core Schema" specification: ${name}
+Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
+}
 function setOutput(name, value) {
   const filePath = process.env["GITHUB_OUTPUT"] || "";
   if (filePath) {
@@ -23731,6 +23742,80 @@ var GitHub = Octokit.plugin(restEndpointMethods, paginateRest).defaults(defaults
 // node_modules/@actions/github/lib/github.js
 var context2 = new Context();
 
+// src/release.ts
+var getReleaseIdByTagName = async (token, owner, name, tagName) => {
+  const { repository } = await graphql2(
+    `
+            query ($owner: String!, $name: String!, $tagName: String!) {
+                repository(owner: $owner, name: $name) {
+                    release(tagName: $tagName) {
+                        id
+                    }
+                }
+            }
+        `,
+    {
+      owner,
+      name,
+      tagName,
+      headers: { authorization: `token ${token}` }
+    }
+  );
+  return repository.release?.id ?? null;
+};
+var deleteReleaseById = async (token, releaseId) => {
+  await graphql2(
+    `
+            mutation ($input: DeleteReleaseInput!) {
+                deleteRelease(input: $input) {
+                    clientMutationId
+                }
+            }
+        `,
+    {
+      input: { releaseId },
+      headers: { authorization: `token ${token}` }
+    }
+  );
+};
+var createReleaseForTag = async (token, repositoryId, tagName) => {
+  const { createRelease: createRelease2 } = await graphql2(
+    `
+            mutation ($input: CreateReleaseInput!) {
+                createRelease(input: $input) {
+                    release {
+                        url
+                    }
+                }
+            }
+        `,
+    {
+      input: {
+        repositoryId,
+        tagName,
+        name: tagName
+      },
+      headers: { authorization: `token ${token}` }
+    }
+  );
+  return {
+    releaseUrl: createRelease2.release.url
+  };
+};
+var deleteReleaseIfExists = async (options) => {
+  const { token, owner, repo, tagName } = options;
+  const releaseId = await getReleaseIdByTagName(token, owner, repo, tagName);
+  if (!releaseId) {
+    return false;
+  }
+  await deleteReleaseById(token, releaseId);
+  return true;
+};
+var createRelease = async (options) => {
+  const { token, repositoryId, tagName } = options;
+  return createReleaseForTag(token, repositoryId, tagName);
+};
+
 // src/tag.ts
 var normalizeTagName = (tag) => {
   return tag.startsWith("refs/tags/") ? tag.slice("refs/tags/".length) : tag;
@@ -23836,13 +23921,25 @@ var pushTag = async (options) => {
 
 // src/main.ts
 var run = async () => {
-  const tag = getInput("tag", { required: true });
+  const tag = normalizeTagName(getInput("tag", { required: true }));
+  const shouldCreateRelease = getBooleanInput("release");
   const owner = context2.repo.owner;
   const repo = context2.repo.repo;
   const sha = context2.sha;
   const token = process.env.GITHUB_TOKEN;
   if (!token) {
     throw new Error("GITHUB_TOKEN is not set");
+  }
+  if (shouldCreateRelease) {
+    const deleted = await deleteReleaseIfExists({
+      token,
+      owner,
+      repo,
+      tagName: tag
+    });
+    if (deleted) {
+      info(`Deleted existing release "${tag}"`);
+    }
   }
   info(`Creating tag "${tag}" on ${owner}/${repo} at ${sha}`);
   const result = await pushTag({
@@ -23855,6 +23952,16 @@ var run = async () => {
   setOutput("tag-url", result.tagUrl);
   setOutput("tag-sha", result.tagSha);
   info(`Tag created: ${result.tagUrl}`);
+  if (shouldCreateRelease) {
+    const repositoryId = await getRepositoryId(token, owner, repo);
+    const release = await createRelease({
+      token,
+      repositoryId,
+      tagName: tag
+    });
+    setOutput("release-url", release.releaseUrl);
+    info(`Release created: ${release.releaseUrl}`);
+  }
 };
 run().catch((error2) => {
   if (error2 instanceof Error) {

@@ -11,7 +11,7 @@ type TagResult = {
     tagSha: string;
 };
 
-const normalizeTagName = (tag: string): string => {
+export const normalizeTagName = (tag: string): string => {
     return tag.startsWith("refs/tags/") ? tag.slice("refs/tags/".length) : tag;
 };
 
@@ -20,7 +20,7 @@ const tagRefName = (tag: string): string => {
     return `refs/tags/${name}`;
 };
 
-const getRepositoryId = async (
+export const getRepositoryId = async (
     token: string,
     owner: string,
     name: string,

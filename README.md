@@ -20,6 +20,7 @@ steps:
   - uses: lucaspopp0/tag-and-push@v1
     with:
       tag: v1.2.3
+      release: true
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -29,6 +30,7 @@ steps:
 | Input | Required | Description |
 | --- | --- | --- |
 | `tag` | yes | Tag name (for example `v1.0.0`) |
+| `release` | no | If `true`, creates a release named after the tag and pointing to it. Defaults to `false`. |
 
 ## Outputs
 
@@ -36,6 +38,7 @@ steps:
 | --- | --- |
 | `tag-url` | GitHub URL for the tag |
 | `tag-sha` | Commit SHA the tag points to |
+| `release-url` | GitHub URL for the release. Set only when `release` is `true`. |
 
 ## Development
 
