@@ -1,17 +1,37 @@
-import { getInput, setFailed } from "@actions/core";
-import { createActionAuth } from "@octokit/auth-action";
-import { Octokit } from "@octokit/rest";
-import getOctokit from "./steps/getOctokit";
-import cleanupExistingTag from "./steps/cleanupExistingTag";
-import createNewTag from "./steps/createNewTag";
+import * as core from "@actions/core";
+import * as github from "@actions/github";
+import { pushTag } from "./tag";
 
-const run = async () => {
-    const inputTag = getInput('tag');
+const run = async (): Promise<void> => {
+    const tag = core.getInput("tag", { required: true });
+    const owner = github.context.repo.owner;
+    const repo = github.context.repo.repo;
+    const sha = github.context.sha;
 
-    const octokit = getOctokit()
-    
-    await cleanupExistingTag(octokit, inputTag)
-    await createNewTag(octokit, inputTag)
-}
+    const token = process.env.GITHUB_TOKEN;
+    if (!token) {
+        throw new Error("GITHUB_TOKEN is not set");
+    }
 
-run()
+    core.info(`Creating tag "${tag}" on ${owner}/${repo} at ${sha}`);
+
+    const result = await pushTag({
+        token,
+        owner,
+        repo,
+        tag,
+        sha,
+    });
+
+    core.setOutput("tag-url", result.tagUrl);
+    core.setOutput("tag-sha", result.tagSha);
+    core.info(`Tag created: ${result.tagUrl}`);
+};
+
+run().catch((error: unknown) => {
+    if (error instanceof Error) {
+        core.setFailed(error.message);
+        return;
+    }
+    core.setFailed("Unknown error");
+});

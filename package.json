@@ -1,7 +1,7 @@
 {
   "name": "tag-and-push",
   "version": "1.0.0",
-  "description": "",
+  "description": "GitHub Action to create and push git tags via the GraphQL API",
   "homepage": "https://github.com/lucaspopp0/tag-and-push#readme",
   "repository": {
     "type": "git",
@@ -9,7 +9,6 @@
   },
   "license": "MIT",
   "author": "Lucas Popp",
-  "main": "lib/main.js",
   "scripts": {
     "build": "tsc --noEmit",
     "pack": "esbuild src/main.ts --bundle --platform=node --format=cjs --target=node24 --outfile=dist/index.js"
@@ -22,9 +21,7 @@
   "dependencies": {
     "@actions/core": "^3.0.1",
     "@actions/github": "^9.1.1",
-    "@octokit/auth-action": "^6.0.2",
-    "@octokit/auth-app": "^8.2.0",
-    "@octokit/request-error": "^7.1.0",
-    "@octokit/rest": "^22.0.1"
+    "@octokit/graphql": "^9.0.3",
+    "@octokit/request-error": "^7.1.0"
   }
 }

@@ -1,16 +1,22 @@
-name: Create a new tag, and push it
-description: ""
+name: Create and push a git tag
+description: >-
+  Create a git tag on GitHub using the GraphQL API, without a local git push.
+  Inspired by planetscale/ghcommit.
+
+branding:
+  color: orange
+  icon: tag
 
 inputs:
   tag:
-    description: Tag to push
+    description: Tag name (for example v1.0.0). The refs/tags/ prefix is added automatically.
     required: true
-  app-client-id:
-    required: false
-    description: ""
-  app-private-key:
-    required: false
-    description: ""
+
+outputs:
+  tag-url:
+    description: URL for the tag on GitHub.
+  tag-sha:
+    description: Commit SHA the tag points to.
 
 runs:
   using: node24
