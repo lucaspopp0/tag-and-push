@@ -1,0 +1,55 @@
+name: tag-and-release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+
+  tag-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      -
+        name: Pick next version
+        uses: lucaspopp0/semantic-version@v0
+        id: next-version
+        with:
+          tag-prefix: v
+      -
+        name: Tag and push (patch version)
+        uses: lucaspopp0/tag-and-push@v0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          tag: ${{ steps.next-version.outputs.next-patch-tag }}
+          release: true
+      -
+        name: Tag and push (minor version)
+        if: true
+        uses: lucaspopp0/tag-and-push@v0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          tag: ${{ steps.next-version.outputs.next-minor-tag }}
+          release: false
+      -
+        name: Tag and push (major version)
+        if: true
+        uses: lucaspopp0/tag-and-push@v0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          tag: ${{ steps.next-version.outputs.next-major-tag }}
+          release: false

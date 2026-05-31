@@ -1,11 +1,5 @@
 import { graphql } from "@octokit/graphql";
 
-type RepositoryIds = {
-    repositoryId: string;
-    owner: string;
-    name: string;
-};
-
 type TagResult = {
     tagUrl: string;
     tagSha: string;
