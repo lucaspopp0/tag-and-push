@@ -1,0 +1,51 @@
+name: pr
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        uses: actions/checkout@v6
+      -
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: package.json
+          cache: npm
+          cache-dependency-path: package-lock.json
+      -
+        run: npm ci
+      -
+        name: Lint source code
+        run: npm run lint
+      -
+        name: Run tests
+        run: npm run test
+      -
+        name: Repack outputs
+        run: |
+          npm run build
+          npm run pack
+      -
+        name: Detect changes
+        shell: bash
+        run: |
+          # Check for generated changes
+
+          git status -s
+
+          if [ -n "$(git status -s)" ]; then
+            >&2 echo "Please rebuild and repack"
+            exit 1
+          fi
