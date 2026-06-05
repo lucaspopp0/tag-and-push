@@ -71,11 +71,6 @@ jobs:
 
 <!-- AUTO-DOC-INPUT:END -->
 
-| Input | Required | Description |
-| --- | --- | --- |
-| `tag` | yes | Tag name (for example `v1.0.0`) |
-| `release` | no | If `true`, creates a release named after the tag and pointing to it. Defaults to `false`. |
-
 ## Outputs
 
 <!-- AUTO-DOC-OUTPUT:START - Do not remove or modify this section -->
@@ -87,12 +82,6 @@ jobs:
 |       <a name="output_tag-url"></a>[tag-url](#output_tag-url)       | string |                    URL for the tag on <br>GitHub.                      |
 
 <!-- AUTO-DOC-OUTPUT:END -->
-
-| Output | Description |
-| --- | --- |
-| `tag-url` | GitHub URL for the tag |
-| `tag-sha` | Commit SHA the tag points to |
-| `release-url` | GitHub URL for the release. Set only when `release` is `true`. |
 
 ## Development
 
