@@ -5,9 +5,9 @@ Create a git tag on GitHub from a workflow using the GraphQL API, without `git p
 Tags the workflow commit (`github.context.sha`) in the current repository.
 An existing tag with the same name is replaced.
 
-* [Inputs](./#inputs)
-* [Outputs](./#outputs)
-* [Example Usage](./#example-usage)
+* [Inputs](#inputs)
+* [Outputs](#outputs)
+* [Example Usage](#example-usage)
 
 ## Inputs
 
