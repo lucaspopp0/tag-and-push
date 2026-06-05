@@ -9,9 +9,8 @@ branding:
 
 inputs:
   tag:
-    description: |
+    description: |-
       Tag name (for example v1.0.0).
-      
       The refs/tags/ prefix is added automatically.
     required: true
   release:
