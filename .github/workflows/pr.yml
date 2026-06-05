@@ -48,6 +48,8 @@ jobs:
       -
         name: Run auto-doc
         uses: tj-actions/auto-doc@v3
+        with:
+          col_max_words: 10
       -
         name: Check for changes
         id: detect-changes
