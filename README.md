@@ -17,8 +17,8 @@ An existing tag with the same name is replaced.
 |-------------------------------------------------------|--------|----------|-----------|--------------------------------------------------|
 | <a name="input_release"></a>[release](#input_release) | string |  false   | `"false"` | If 'true', creates a release pointing to the tag |
 |                                                       |        |          |           |                                                  |
-|       <a name="input_tag"></a>[tag](#input_tag)       | string |   true   |           |       Tag name (for example v1.0.0).  The        |
-|                                                       |        |          |           |    refs/tags/ prefix is added automatically.     |
+|       <a name="input_tag"></a>[tag](#input_tag)       | string |   true   |           |  Tag name (for example v1.0.0). The refs/tags/   |
+|                                                       |        |          |           |          prefix is added automatically.          |
 
 <!-- AUTO-DOC-INPUT:END -->
 
