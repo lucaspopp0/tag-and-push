@@ -49,8 +49,7 @@ jobs:
         name: Run auto-doc
         uses: tj-actions/auto-doc@v3
         with:
-          col_max_words: 40
-          col_max_width: 2000
+          col_max_words: 20
       -
         name: Check for changes
         id: detect-changes
