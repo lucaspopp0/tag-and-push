@@ -17,7 +17,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       -
+        uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ secrets.BOT_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+      -
         uses: actions/checkout@v6
+        with:
+          token: ${{ steps.app-token.outputs.token || github.token }}
       -
         uses: actions/setup-node@v6
         with:
@@ -38,14 +46,19 @@ jobs:
           npm run build
           npm run pack
       -
-        name: Detect changes
-        shell: bash
-        run: |
-          # Check for generated changes
-
-          git status -s
-
-          if [ -n "$(git status -s)" ]; then
-            >&2 echo "Please rebuild and repack"
-            exit 1
-          fi
+        name: Run auto-doc
+        uses: tj-actions/auto-doc@v3
+      -
+        name: Check for changes
+        id: detect-changes
+        uses: tj-actions/verify-changed-files@v20
+      -
+        name: Commit changes if detected
+        if: ${{ steps.detect-changes.outputs.files_changed == 'true' }}
+        uses: planetscale/ghcommit-action@v0.2.20
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
+        with:
+          commit_message: "generated changes"
+          repo: ${{ github.repository }}
+          branch: ${{ github.head_ref }}

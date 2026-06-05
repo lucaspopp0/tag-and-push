@@ -1,28 +1,63 @@
 # tag-and-push
 
-Create a git tag on GitHub from a workflow using the GraphQL API, without `git push`.
-
-Inspired by [planetscale/ghcommit](https://github.com/planetscale/ghcommit) and
-[planetscale/ghcommit-action](https://github.com/planetscale/ghcommit-action).
+Create a git tag on GitHub from a workflow using the GraphQL API, without `git push`
 
 Tags the workflow commit (`github.context.sha`) in the current repository.
 An existing tag with the same name is replaced.
 
-## Usage
+* [Example Usage](./#example-usage)
+* [Inputs](./#inputs)
+* [Outputs](./#outputs)
+
+## Example Usage
 
 ```yaml
+name: tag-and-release
+
+on:
+  push:
+    branches: [main]
+
 permissions:
   contents: write
+  pull-requests: read
 
-steps:
-  - uses: actions/checkout@v4
+defaults:
+  run:
+    shell: bash
 
-  - uses: lucaspopp0/tag-and-push@v1
-    with:
-      tag: v1.2.3
-      release: true
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+jobs:
+
+  tag-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      -
+        name: Pick next version
+        uses: lucaspopp0/semantic-version@v0
+        id: next-version
+        with:
+          tag-prefix: v
+      -
+        name: "Tag and push new version (ex: v0.0.1)"
+        uses: lucaspopp0/tag-and-push@v0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          tag: ${{ steps.next-version.outputs.next-patch-tag }}
+          release: true
+      -
+        name: "Tag and push floating major tag (ex: v0)"
+        if: true
+        uses: lucaspopp0/tag-and-push@v0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          tag: ${{ steps.next-version.outputs.next-major-tag }}
+          release: false
 ```
 
 ## Inputs
