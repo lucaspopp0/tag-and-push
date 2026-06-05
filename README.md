@@ -13,10 +13,12 @@ An existing tag with the same name is replaced.
 
 <!-- AUTO-DOC-INPUT:START - Do not remove or modify this section -->
 
-|                         INPUT                         |  TYPE  | REQUIRED |  DEFAULT  |                                  DESCRIPTION                                  |
-|-------------------------------------------------------|--------|----------|-----------|-------------------------------------------------------------------------------|
-| <a name="input_release"></a>[release](#input_release) | string |  false   | `"false"` |               If 'true', creates a release pointing to the tag                |
-|       <a name="input_tag"></a>[tag](#input_tag)       | string |   true   |           | Tag name (for example v1.0.0). The refs/tags/ prefix is added automatically.  |
+|                         INPUT                         |  TYPE  | REQUIRED |  DEFAULT  |                   DESCRIPTION                    |
+|-------------------------------------------------------|--------|----------|-----------|--------------------------------------------------|
+| <a name="input_release"></a>[release](#input_release) | string |  false   | `"false"` | If 'true', creates a release pointing to the tag |
+|                                                       |        |          |           |                                                  |
+|       <a name="input_tag"></a>[tag](#input_tag)       | string |   true   |           |       Tag name (for example v1.0.0).  The        |
+|                                                       |        |          |           |    refs/tags/ prefix is added automatically.     |
 
 <!-- AUTO-DOC-INPUT:END -->
 
@@ -24,11 +26,15 @@ An existing tag with the same name is replaced.
 
 <!-- AUTO-DOC-OUTPUT:START - Do not remove or modify this section -->
 
-|                               OUTPUT                                |  TYPE  |                            DESCRIPTION                             |
-|---------------------------------------------------------------------|--------|--------------------------------------------------------------------|
-| <a name="output_release-url"></a>[release-url](#output_release-url) | string | URL for the release on GitHub. Set only when release <br>is true.  |
-|       <a name="output_tag-sha"></a>[tag-sha](#output_tag-sha)       | string |                   Commit SHA the tag points to.                    |
-|       <a name="output_tag-url"></a>[tag-url](#output_tag-url)       | string |                     URL for the tag on GitHub.                     |
+|                               OUTPUT                                |  TYPE  |           DESCRIPTION           |
+|---------------------------------------------------------------------|--------|---------------------------------|
+| <a name="output_release-url"></a>[release-url](#output_release-url) | string | URL for the release on GitHub.  |
+|                                                                     |        | Set only when release is `true` |
+|                                                                     |        |                                 |
+|       <a name="output_tag-sha"></a>[tag-sha](#output_tag-sha)       | string |  Commit SHA the tag points to.  |
+|                                                                     |        |                                 |
+|       <a name="output_tag-url"></a>[tag-url](#output_tag-url)       | string |   URL for the tag on GitHub.    |
+|                                                                     |        |                                 |
 
 <!-- AUTO-DOC-OUTPUT:END -->
 
