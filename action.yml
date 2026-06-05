@@ -9,20 +9,29 @@ branding:
 
 inputs:
   tag:
-    description: Tag name (for example v1.0.0). The refs/tags/ prefix is added automatically.
+    description: |
+      Tag name (for example v1.0.0).
+      
+      The refs/tags/ prefix is added automatically.
     required: true
   release:
     required: false
     default: 'false'
-    description: If 'true', creates a release pointing to the tag
+    description: |
+      If 'true', creates a release pointing to the tag
 
 outputs:
   tag-url:
-    description: URL for the tag on GitHub.
+    description: |
+      URL for the tag on GitHub.
   tag-sha:
-    description: Commit SHA the tag points to.
+    description: |
+      Commit SHA the tag points to.
   release-url:
-    description: URL for the release on GitHub. Set only when release is true.
+    description: |
+      URL for the release on GitHub.
+      
+      Set only when release is `true`
 
 runs:
   using: node24
