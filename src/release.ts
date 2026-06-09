@@ -1,8 +1,20 @@
 import { getOctokit } from "@actions/github";
 import { RequestError } from "@octokit/request-error";
 
+export type ReleaseType = "release" | "prerelease";
+
 type ReleaseResult = {
     releaseUrl: string;
+};
+
+export const parseReleaseType = (value: string): ReleaseType => {
+    if (value === "release" || value === "prerelease") {
+        return value;
+    }
+
+    throw new Error(
+        `Invalid release-type "${value}": must be "release" or "prerelease"`,
+    );
 };
 
 const isNotFoundError = (error: unknown): boolean => {
@@ -49,8 +61,9 @@ export const createRelease = async (options: {
     owner: string;
     repo: string;
     tagName: string;
+    releaseType?: ReleaseType;
 }): Promise<ReleaseResult> => {
-    const { token, owner, repo, tagName } = options;
+    const { token, owner, repo, tagName, releaseType = "release" } = options;
     const octokit = getOctokit(token);
 
     const { data } = await octokit.rest.repos.createRelease({
@@ -58,6 +71,7 @@ export const createRelease = async (options: {
         repo,
         tag_name: tagName,
         name: tagName,
+        prerelease: releaseType === "prerelease",
     });
 
     return {

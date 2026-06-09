@@ -15,6 +15,12 @@ inputs:
     required: false
     default: 'false'
     description: If 'true', creates a release pointing to the tag
+  release-type:
+    required: false
+    default: release
+    description: >-
+      Type of release to create when release is 'true'.
+      Must be 'release' or 'prerelease'.
 
 outputs:
   tag-url:
