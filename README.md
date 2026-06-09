@@ -13,10 +13,11 @@ An existing tag with the same name is replaced.
 
 <!-- AUTO-DOC-INPUT:START - Do not remove or modify this section -->
 
-|                         INPUT                         |  TYPE  | REQUIRED |  DEFAULT  |                   DESCRIPTION                    |
-|-------------------------------------------------------|--------|----------|-----------|--------------------------------------------------|
-| <a name="input_release"></a>[release](#input_release) | string |  false   | `"false"` | If 'true', creates a release pointing to the tag |
-|       <a name="input_tag"></a>[tag](#input_tag)       | string |   true   |           |          Tag name (for example v1.0.0)           |
+|                                INPUT                                 |  TYPE  | REQUIRED |   DEFAULT   |                                     DESCRIPTION                                      |
+|----------------------------------------------------------------------|--------|----------|-------------|--------------------------------------------------------------------------------------|
+|        <a name="input_release"></a>[release](#input_release)         | string |  false   |  `"false"`  |                   If 'true', creates a release pointing to the tag                   |
+| <a name="input_release-type"></a>[release-type](#input_release-type) | string |  false   | `"release"` | Type of release to create when release is 'true'. Must be 'release' or 'prerelease'. |
+|              <a name="input_tag"></a>[tag](#input_tag)               | string |   true   |             |                            Tag name (for example v1.0.0)                             |
 
 <!-- AUTO-DOC-INPUT:END -->
 
