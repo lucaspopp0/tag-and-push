@@ -1,6 +1,10 @@
 import { getOctokit } from '@actions/github';
 import { RequestError } from '@octokit/request-error';
-import { createRelease, deleteReleaseIfExists } from './release';
+import {
+    createRelease,
+    deleteReleaseIfExists,
+    parseReleaseType,
+} from './release';
 
 const mockGetOctokit = jest.mocked(getOctokit);
 
@@ -87,6 +91,22 @@ describe('deleteReleaseIfExists', () => {
     });
 });
 
+describe('parseReleaseType', () => {
+    it('accepts release', () => {
+        expect(parseReleaseType('release')).toBe('release');
+    });
+
+    it('accepts prerelease', () => {
+        expect(parseReleaseType('prerelease')).toBe('prerelease');
+    });
+
+    it('rejects invalid values', () => {
+        expect(() => parseReleaseType('beta')).toThrow(
+            'Invalid release-type "beta": must be "release" or "prerelease"',
+        );
+    });
+});
+
 describe('createRelease', () => {
     beforeEach(() => {
         jest.clearAllMocks();
@@ -111,6 +131,35 @@ describe('createRelease', () => {
             repo: 'widgets',
             tag_name: 'v1.0.0',
             name: 'v1.0.0',
+            prerelease: false,
+        });
+    });
+
+    it('creates a pre-release when releaseType is prerelease', async () => {
+        const mockOctokit = createMockOctokit();
+        mockGetOctokit.mockReturnValue(mockOctokit as never);
+        mockOctokit.rest.repos.createRelease.mockResolvedValue({
+            data: {
+                html_url: 'https://github.com/acme/widgets/releases/tag/v1.0.0-beta.1',
+            },
+        });
+
+        const result = await createRelease({
+            ...releaseOptions,
+            tagName: 'v1.0.0-beta.1',
+            releaseType: 'prerelease',
+        });
+
+        expect(result).toEqual({
+            releaseUrl:
+                'https://github.com/acme/widgets/releases/tag/v1.0.0-beta.1',
+        });
+        expect(mockOctokit.rest.repos.createRelease).toHaveBeenCalledWith({
+            owner: 'acme',
+            repo: 'widgets',
+            tag_name: 'v1.0.0-beta.1',
+            name: 'v1.0.0-beta.1',
+            prerelease: true,
         });
     });
 });

@@ -1,11 +1,16 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
-import { createRelease, deleteReleaseIfExists } from "./release";
+import {
+    createRelease,
+    deleteReleaseIfExists,
+    parseReleaseType,
+} from "./release";
 import { normalizeTagName, pushTag } from "./tag";
 
 const run = async (): Promise<void> => {
     const tag = normalizeTagName(core.getInput("tag", { required: true }));
     const shouldCreateRelease = core.getBooleanInput("release");
+    const releaseType = parseReleaseType(core.getInput("release-type"));
     const owner = github.context.repo.owner;
     const repo = github.context.repo.repo;
     const sha = github.context.sha;
@@ -48,6 +53,7 @@ const run = async (): Promise<void> => {
             owner,
             repo,
             tagName: tag,
+            releaseType,
         });
 
         core.setOutput("release-url", release.releaseUrl);
