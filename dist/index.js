@@ -23780,6 +23780,14 @@ function getOctokit(token, options, ...additionalPlugins) {
 }
 
 // src/release.ts
+var parseReleaseType = (value) => {
+  if (value === "release" || value === "prerelease") {
+    return value;
+  }
+  throw new Error(
+    `Invalid release-type "${value}": must be "release" or "prerelease"`
+  );
+};
 var isNotFoundError = (error2) => {
   return error2 instanceof RequestError && error2.status === 404;
 };
@@ -23808,13 +23816,14 @@ var deleteReleaseIfExists = async (options) => {
   return true;
 };
 var createRelease = async (options) => {
-  const { token, owner, repo, tagName } = options;
+  const { token, owner, repo, tagName, releaseType = "release" } = options;
   const octokit = getOctokit(token);
   const { data } = await octokit.rest.repos.createRelease({
     owner,
     repo,
     tag_name: tagName,
-    name: tagName
+    name: tagName,
+    prerelease: releaseType === "prerelease"
   });
   return {
     releaseUrl: data.html_url
@@ -23928,6 +23937,7 @@ var pushTag = async (options) => {
 var run = async () => {
   const tag = normalizeTagName(getInput("tag", { required: true }));
   const shouldCreateRelease = getBooleanInput("release");
+  const releaseType = parseReleaseType(getInput("release-type"));
   const owner = context2.repo.owner;
   const repo = context2.repo.repo;
   const sha = context2.sha;
@@ -23962,7 +23972,8 @@ var run = async () => {
       token,
       owner,
       repo,
-      tagName: tag
+      tagName: tag,
+      releaseType
     });
     setOutput("release-url", release.releaseUrl);
     info(`Release created: ${release.releaseUrl}`);
